@@ -57,7 +57,7 @@ Editar `.env` con tus configuraciones:
 NODE_ENV=development
 PORT=3000
 
-DATABASE_URL="postgresql://user:password@localhost:5432/peluqueria_db?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:3002/peluqueria_db?schema=public"
 
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=15m
