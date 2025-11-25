@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  BARBER
+  CLIENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  APPOINTMENT_CREATED
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_REMINDER
+  SYSTEM
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         UserRole
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  phone        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  barber        Barber?
+  client        Client?
+  organization  Organization?  // ← AGREGAR ESTA LÍNEA
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+  @@index([email])
+  @@index([role])
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+  adminId   String   @unique @map("admin_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  admin       User        @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  barbers     Barber[]
+  appointments Appointment[]
+
+  @@map("organizations")
+  @@index([adminId])
+}
+
+model Barber {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  organizationId String   @map("organization_id")
+  specialties    Json?    // Array of specialty strings
+  schedule       Json?    // Schedule object with days and hours
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@map("barbers")
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Client {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  preferences Json?    // Client preferences object
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@map("clients")
+  @@index([userId])
+}
+
+model Appointment {
+  id             String           @id @default(uuid())
+  barberId       String           @map("barber_id")
+  clientId       String           @map("client_id")
+  organizationId String           @map("organization_id")
+  appointmentDate DateTime        @map("appointment_date")
+  duration       Int              // Duration in minutes
+  status         AppointmentStatus @default(PENDING)
+  notes          String?
+  googleEventId  String?          @map("google_event_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  barber       Barber       @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("appointments")
+  @@index([barberId])
+  @@index([clientId])
+  @@index([organizationId])
+  @@index([appointmentDate])
+  @@index([status])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  metadata  Json?            // Additional data as JSON
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
