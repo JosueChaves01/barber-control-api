@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import authController from '@controllers/auth.controller';
 import { authenticateToken } from '@middleware/auth';
 import { validate } from '@middleware/validate';
-import { registerSchema, loginSchema, refreshTokenSchema } from '@validators/auth.validator';
+import { registerSchema, loginSchema, refreshTokenSchema, googleLoginSchema } from '@validators/auth.validator';
 import { RequestWithUser } from '@types';
 
 const router = Router();
@@ -66,6 +66,48 @@ router.post('/register', validate(registerSchema), authController.register);
  *         description: Login exitoso
  */
 router.post('/login', validate(loginSchema), authController.login);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   post:
+ *     summary: Iniciar sesión con Google
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: ID token de Google obtenido del frontend
+ *     responses:
+ *       200:
+ *         description: Login exitoso con Google
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                     accessToken:
+ *                       type: string
+ *                     refreshToken:
+ *                       type: string
+ *       401:
+ *         description: Token de Google inválido
+ */
+router.post('/google', validate(googleLoginSchema), authController.loginWithGoogle);
 
 /**
  * @swagger

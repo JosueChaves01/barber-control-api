@@ -1,4 +1,4 @@
-import { UserRole, AppointmentStatus, NotificationType } from '@prisma/client';
+import { UserRole, AppointmentStatus, NotificationType, AuthProvider } from '@prisma/client';
 
 export interface JwtPayload {
   userId: string;
@@ -22,5 +22,5 @@ declare global {
 
 export interface RequestWithUser extends Request {}
 
-export { UserRole, AppointmentStatus, NotificationType };
+export { UserRole, AppointmentStatus, NotificationType, AuthProvider };
 

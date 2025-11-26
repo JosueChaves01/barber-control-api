@@ -8,6 +8,12 @@ export class UserRepository {
     });
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return prisma.user.findUnique({
+      where: { googleId },
+    });
+  }
+
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { id },

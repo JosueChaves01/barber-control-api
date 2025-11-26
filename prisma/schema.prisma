@@ -32,16 +32,23 @@ enum NotificationType {
   SYSTEM
 }
 
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
-  passwordHash String    @map("password_hash")
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String?      @map("password_hash")
+  googleId     String?      @unique @map("google_id")
+  provider     AuthProvider @default(LOCAL)
   role         UserRole
-  firstName    String    @map("first_name")
-  lastName     String    @map("last_name")
+  firstName    String       @map("first_name")
+  lastName     String       @map("last_name")
   phone        String?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
   // Relations
   barber        Barber?
@@ -53,6 +60,7 @@ model User {
   @@map("users")
   @@index([email])
   @@index([role])
+  @@index([googleId])
 }
 
 model Organization {
