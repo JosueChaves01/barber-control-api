@@ -30,8 +30,10 @@ export class BarberService {
     // Check permissions
     if (userRole === UserRole.SUPERADMIN) {
       // SuperAdmin can create barbers in any organization
-    } else if (userRole === UserRole.ADMIN && organization.adminId !== userId) {
-      throw new ForbiddenError('No tienes permisos para crear barberos en esta organización');
+    } else if (userRole === UserRole.ADMIN) {
+      if (String(organization.adminId) !== String(userId)) {
+        throw new ForbiddenError('No tienes permisos para crear barberos en esta organización');
+      }
     } else {
       throw new ForbiddenError('No tienes permisos para crear barberos');
     }
@@ -55,13 +57,14 @@ export class BarberService {
           firstName: data.firstName,
           lastName: data.lastName,
           phone: data.phone,
+          provider: 'LOCAL',
         },
       });
 
       const barber = await tx.barber.create({
         data: {
           userId: user.id,
-          organizationId,
+          organizationId: organizationId,
           specialties: data.specialties || [],
           schedule: data.schedule || {},
         },
@@ -102,14 +105,18 @@ export class BarberService {
     // Check permissions
     if (userRole === UserRole.SUPERADMIN) {
       // SuperAdmin can view barbers in any organization
-    } else if (userRole === UserRole.ADMIN && organization.adminId !== userId) {
-      throw new ForbiddenError('No tienes acceso a esta organización');
+    } else if (userRole === UserRole.ADMIN) {
+      if (String(organization.adminId) !== String(userId)) {
+        throw new ForbiddenError('No tienes acceso a esta organización');
+      }
     } else if (userRole === UserRole.BARBER) {
       // Barber can view other barbers in their organization
       const barber = await barberRepository.findByUserId(userId);
-      if (!barber || barber.organizationId !== organizationId) {
+      if (!barber || String(barber.organizationId) !== String(organizationId)) {
         throw new ForbiddenError('No tienes acceso a esta organización');
       }
+    } else if (userRole === UserRole.CLIENT) {
+      // Clients can view barbers to book appointments
     } else {
       throw new ForbiddenError('No tienes permisos para ver barberos');
     }
@@ -136,11 +143,13 @@ export class BarberService {
       // SuperAdmin can update any barber
     } else if (userRole === UserRole.ADMIN) {
       const organization = await organizationRepository.findById(barber.organizationId);
-      if (!organization || organization.adminId !== userId) {
+      if (!organization || String(organization.adminId) !== String(userId)) {
         throw new ForbiddenError('No tienes permisos para actualizar este barbero');
       }
-    } else if (userRole === UserRole.BARBER && barber.userId !== userId) {
-      throw new ForbiddenError('Solo puedes actualizar tu propio perfil');
+    } else if (userRole === UserRole.BARBER) {
+      if (String(barber.userId) !== String(userId)) {
+        throw new ForbiddenError('Solo puedes actualizar tu propio perfil');
+      }
     } else {
       throw new ForbiddenError('No tienes permisos para actualizar barberos');
     }
@@ -155,4 +164,3 @@ export class BarberService {
 }
 
 export default new BarberService();
-

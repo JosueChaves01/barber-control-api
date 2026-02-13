@@ -11,6 +11,8 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
+router.get('/', organizationsController.getOrganizations);
+
 /**
  * @swagger
  * /api/organizations/{id}:

@@ -136,6 +136,10 @@ export class OrganizationService {
     return organization;
   }
 
+  async getOrganizations(skip?: number, take?: number) {
+    return organizationRepository.findAll(skip, take);
+  }
+
   async updateOrganization(id: string, data: {
     name?: string;
     address?: string;

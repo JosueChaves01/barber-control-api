@@ -3,6 +3,22 @@ import organizationService from '@services/organization.service';
 import { RequestWithUser } from '@types';
 
 export class OrganizationsController {
+  async getOrganizations(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { skip, take } = req.query;
+      const organizations = await organizationService.getOrganizations(
+        skip ? Number(skip) : undefined,
+        take ? Number(take) : undefined
+      );
+      res.json({
+        success: true,
+        data: organizations,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getOrganization(req: RequestWithUser, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) {

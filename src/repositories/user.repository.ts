@@ -5,12 +5,22 @@ export class UserRepository {
   async findByEmail(email: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { email },
+      include: {
+        organization: true,
+        barber: true,
+        client: true,
+      },
     });
   }
 
   async findByGoogleId(googleId: string): Promise<User | null> {
     return prisma.user.findUnique({
       where: { googleId },
+      include: {
+        organization: true,
+        barber: true,
+        client: true,
+      },
     });
   }
 
@@ -18,6 +28,7 @@ export class UserRepository {
     return prisma.user.findUnique({
       where: { id },
       include: {
+        organization: true,
         barber: true,
         client: true,
       },

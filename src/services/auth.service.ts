@@ -11,11 +11,26 @@ import { googleConfig } from '@config/google';
 export class AuthService {
   private googleClient = new OAuth2Client(googleConfig.clientId);
 
+  private formatUserResponse(user: any) {
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      phone: user.phone,
+      provider: user.provider,
+      organizationId: user.organization?.id || user.barber?.organizationId,
+      barberId: user.barber?.id,
+      clientId: user.client?.id,
+    };
+  }
+
   async register(data: {
     email: string;
     password: string;
-    first_name: string;
-    last_name: string;
+    firstName: string;
+    lastName: string;
     phone?: string;
   }) {
     // Check if user already exists
@@ -34,9 +49,10 @@ export class AuthService {
           email: data.email,
           passwordHash,
           role: UserRole.CLIENT,
-          firstName: data.first_name,
-          lastName: data.last_name,
+          firstName: data.firstName,
+          lastName: data.lastName,
           phone: data.phone,
+          provider: 'LOCAL',
         },
       });
 
@@ -73,14 +89,7 @@ export class AuthService {
     });
 
     return {
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        role: result.user.role,
-        firstName: result.user.firstName,
-        lastName: result.user.lastName,
-        phone: result.user.phone,
-      },
+      user: this.formatUserResponse(result.user ? { ...result.user, client: result.client } : { ...result, client: result.client }),
       accessToken,
       refreshToken,
     };
@@ -131,14 +140,7 @@ export class AuthService {
     });
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        phone: user.phone,
-      },
+      user: this.formatUserResponse(user),
       accessToken,
       refreshToken,
     };
@@ -201,6 +203,15 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        organizationId: (user as any).organization?.id,
+      }
     };
   }
 
@@ -225,7 +236,7 @@ export class AuthService {
         throw new UnauthorizedError('Token de Google inválido');
       }
 
-      const { sub: googleId, email, given_name: firstName, family_name: lastName, picture } = payload;
+      const { sub: googleId, email, given_name: firstName, family_name: lastName } = payload;
 
       if (!email || !googleId) {
         throw new UnauthorizedError('Token de Google no contiene información suficiente');
@@ -237,7 +248,7 @@ export class AuthService {
       // If not found by googleId, check by email
       if (!user) {
         user = await userRepository.findByEmail(email);
-        
+
         // If user exists by email but doesn't have googleId, link the account
         if (user && !user.googleId) {
           user = await userRepository.update(user.id, {
@@ -305,6 +316,7 @@ export class AuthService {
           firstName: user.firstName,
           lastName: user.lastName,
           phone: user.phone,
+          organizationId: (user as any).organization?.id,
         },
         accessToken,
         refreshToken,
@@ -323,14 +335,7 @@ export class AuthService {
       throw new NotFoundError('Usuario no encontrado');
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      phone: user.phone,
-    };
+    return this.formatUserResponse(user);
   }
 }
 

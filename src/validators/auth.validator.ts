@@ -4,8 +4,8 @@ export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Email inválido'),
     password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
-    first_name: z.string().min(1, 'El nombre es requerido'),
-    last_name: z.string().min(1, 'El apellido es requerido'),
+    firstName: z.string().min(1, 'El nombre es requerido'),
+    lastName: z.string().min(1, 'El apellido es requerido'),
     phone: z.string().optional(),
   }),
 });
@@ -28,4 +28,3 @@ export const googleLoginSchema = z.object({
     idToken: z.string().min(1, 'El ID token de Google es requerido'),
   }),
 });
-
